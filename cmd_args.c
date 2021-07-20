@@ -1,93 +1,86 @@
 #include "pipex.h"
 
-static int	ft_strlen(const char *s)
+static int	ft_strcmp(const char *a, const char *b)
 {
-	if (s == NULL || *s == '\0')
+	if (a == NULL || b == NULL)
 		return (0);
-	return (1 + ft_strlen(s + 1));
+	if ((*a != *b) || !*a || !*b)
+		return (*a - *b);
+	return (ft_strcmp(a + 1, b + 1));
 }
 
-static int	ft_isspace(char c)
-{
-	return (c == ' ' || c == '\t');
-}
-
-static int	wordlen(const char *cmd)
-{
-	if (cmd == NULL || *cmd == '\0' || ft_isspace(*cmd))
-		return (0);
-	return (1 + wordlen(cmd + 1));
-}
-
-static int	blocklen(const char *cmd)
+static char	**get_paths(char **envp)
 {
 	int	i;
 
-	i = wordlen(cmd);
-	while (ft_isspace(cmd[i]))
+	i = 0;
+	while (envp[i] != NULL)
+	{
+		if (ft_strcmp(envp[i], "PATH") == 0)
+			return (ft_split(envp[i], ':'));
 		i++;
-	return (i);
+	}
+	return (NULL);
 }
 
-static int	count_words(const char *cmd)
+static int	append_path(char **arg, char **paths)
+{
+	char	*arg_with_path;
+	int		i;
+
+	i = 0;
+	while (paths[i] != NULL)
+	{
+		arg_with_path = ft_strjoin(*arg, paths[i]);
+		if (access(arg_with_path, X_OK) == 0)
+		{
+			free(*arg);
+			*arg = arg_with_path;
+			return (0);;
+		}
+		free(arg_with_path);
+		i++;
+	}
+	printf("%s: command not found\n", *arg);
+	return (1);
+}
+
+int	check_cmds(char **args, char **paths)
+{
+	if (*args == NULL)
+		return (0);
+	if (access(*args, X_OK) != 0)
+		if (append_path(args, paths) == 1)
+			return (1);
+	return (check_cmds(args + 1, paths));
+}
+
+char	**free_string_arr(char **arr)
 {
 	int	i;
-	int	count;
 
+	if (arr == NULL)
+		return (NULL);
 	i = 0;
-	count = 0;
-	while (cmd[i] != '\0')
-	{
-		i += blocklen(cmd + i);
-		count++;
-	}
-	return (count);
+	while (arr[i] != NULL)
+		free(arr[i++]);
+	free(arr);
+	return (NULL);
 }
 
-static char	*ft_strndup(const char *s, int len)
+char	**get_cmd_args(const char *cmd, char **envp)
 {
-	char	*n;
-	int		i;
-	int		slen;
+	static char	**paths;
+	char		**args;
 
-	slen = ft_strlen(s);
-	if (len > slen)
-		len = slen;
-	n = malloc(len + 1);
-	i = 0;
-	while (s[i] && i < len)
+	if (paths == NULL)
+		paths = get_paths(envp);
+	args = ft_split(cmd, ' ');
+	if (paths == NULL || args == NULL || check_cmds(args, paths) != 0)
 	{
-		n[i] = s[i];
-		i++;
+		free_string_arr(paths);
+		free_string_arr(args);
+		return (NULL);
 	}
-	n[i] = '\0';
-	return (n);
-}
-
-char	**get_cmd_args(const char *cmd)
-{
-	char	**args;
-	int		words_count;
-	int		i;
-
-	words_count = count_words(cmd);
-	args = malloc(sizeof(char *) * (words_count + 1));
-	i = 0;
-	while (i < words_count)
-	{
-		args[i++] = ft_strndup(cmd, wordlen(cmd));
-		cmd += blocklen(cmd);
-	}
-	args[i] = NULL;
 	return (args);
-}
-
-void	free_cmd_args(char **args)
-{
-	int	i;
-
-	i = 0;
-	while (args[i] != NULL)
-		free(args[i++]);
-	free(args);
 }

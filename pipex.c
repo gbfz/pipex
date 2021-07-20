@@ -45,7 +45,7 @@ static void	execute_readfile_cmd(int readfile_fd, char *cmd, char **envp)
 	char	**args;
 	pid_t	pid;
 
-	args = get_cmd_args(cmd);
+	args = get_cmd_args(cmd, envp);
 	out_fd = get_fd_from_pipe_list();
 	pid = fork();
 	if (pid == 0)
@@ -58,7 +58,7 @@ static void	execute_readfile_cmd(int readfile_fd, char *cmd, char **envp)
 		exit(127);
 	}
 	close(out_fd);
-	free_cmd_args(args);
+	free_string_arr(args);
 	append_pid(get_pid_list_addr(), pid);
 }
 
@@ -71,7 +71,7 @@ static void	execute_inner_cmds(int cmd_count, char **cmd, char **envp)
 
 	if (cmd_count == 0)
 		return ;
-	args = get_cmd_args(*cmd);
+	args = get_cmd_args(*cmd, envp);
 	in_fd = get_fd_from_pipe_list();
 	out_fd = get_fd_from_pipe_list();
 	pid = fork();
@@ -86,7 +86,7 @@ static void	execute_inner_cmds(int cmd_count, char **cmd, char **envp)
 	}
 	close(in_fd);
 	close(out_fd);
-	free_cmd_args(args);
+	free_string_arr(args);
 	append_pid(get_pid_list_addr(), pid);
 	execute_inner_cmds(cmd_count - 1, cmd + 1, envp);
 }
@@ -97,7 +97,7 @@ static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
 	char	**args;
 	pid_t	pid;
 
-	args = get_cmd_args(cmd);
+	args = get_cmd_args(cmd, envp);
 	in_fd = get_fd_from_pipe_list();
 	pid = fork();
 	if (pid == 0)
@@ -110,7 +110,7 @@ static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
 		exit(127);
 	}
 	close(in_fd);
-	free_cmd_args(args);
+	free_string_arr(args);
 	append_pid(get_pid_list_addr(), pid);
 }
 
@@ -129,10 +129,10 @@ static int	main_exec(int ac, char **av, char **envp)
 
 	if (handle_files(file_fd, ac, av) != 0)
 		return (1);
-	check_cmds(ac - 3, av, envp);
+	check_cmds(av, envp);
 	create_pipes(ac - 4);
 	execute_readfile_cmd(file_fd[0], av[2], envp);
-	execute_inner_cmds(ac - 5, av + 3, envp);
+	execute_inner_cmds(ac - 5, av + 2, envp);
 	execute_writefile_cmd(file_fd[1], av[ac - 2], envp);
 	wait_for_all_procs();
 	close(file_fd[0]);
