@@ -1,12 +1,28 @@
 #include "pipex.h"
 
-static int	ft_strcmp(const char *a, const char *b)
+static int	free_on_error(char *cmd, char *args, char **paths)
 {
-	if (a == NULL || b == NULL)
-		return (0);
-	if ((*a != *b) || !*a || !*b)
-		return (*a - *b);
-	return (ft_strcmp(a + 1, b + 1));
+	free(cmd);
+	free(args);
+	free_string_arr(paths);
+	return (1);
+}
+
+static char	**get_paths_with_slash(char **paths)
+{
+	char	*tmp;
+	int		i;
+
+	if (paths == NULL)
+		return (NULL);
+	i = -1;
+	while (paths[++i] != NULL)
+	{
+		tmp = paths[i];
+		paths[i] = ft_strjoin(paths[i], "/");
+		free(tmp);
+	}
+	return (paths);
 }
 
 static char	**get_paths(char **envp)
@@ -16,71 +32,65 @@ static char	**get_paths(char **envp)
 	i = 0;
 	while (envp[i] != NULL)
 	{
-		if (ft_strcmp(envp[i], "PATH") == 0)
-			return (ft_split(envp[i], ':'));
+		if (ft_strncmp(envp[i], "PATH", 4) == 0)
+			return (get_paths_with_slash(ft_split(envp[i] + 5, ':')));
 		i++;
 	}
 	return (NULL);
 }
 
-static int	append_path(char **arg, char **paths)
+static int	append_path_and_access(char **cmd, char **paths)
 {
-	char	*arg_with_path;
+	char	*cmd_with_path;
 	int		i;
 
 	i = 0;
 	while (paths[i] != NULL)
 	{
-		arg_with_path = ft_strjoin(*arg, paths[i]);
-		if (access(arg_with_path, X_OK) == 0)
+		cmd_with_path = ft_strjoin(paths[i], *cmd);
+		if (access(cmd_with_path, X_OK) == 0)
 		{
-			free(*arg);
-			*arg = arg_with_path;
-			return (0);;
+			free(*cmd);
+			*cmd = cmd_with_path;
+			return (0);
 		}
-		free(arg_with_path);
+		free(cmd_with_path);
 		i++;
 	}
-	printf("%s: command not found\n", *arg);
+	printf("%s: command not found\n", *cmd);
 	return (1);
 }
 
-int	check_cmds(char **args, char **paths)
+int	handle_cmds(char **cmds, int cmd_count, char **envp)
 {
-	if (*args == NULL)
-		return (0);
-	if (access(*args, X_OK) != 0)
-		if (append_path(args, paths) == 1)
-			return (1);
-	return (check_cmds(args + 1, paths));
-}
+	char	*cmd;
+	char	*args;
+	char	**paths;
+	int		block_len;
+	int		i;
 
-char	**free_string_arr(char **arr)
-{
-	int	i;
-
-	if (arr == NULL)
-		return (NULL);
-	i = 0;
-	while (arr[i] != NULL)
-		free(arr[i++]);
-	free(arr);
-	return (NULL);
-}
-
-char	**get_cmd_args(const char *cmd, char **envp)
-{
-	static char	**paths;
-	char		**args;
-
+	paths = get_paths(envp);
 	if (paths == NULL)
-		paths = get_paths(envp);
-	args = ft_split(cmd, ' ');
-	if (paths == NULL || args == NULL || check_cmds(args, paths) != 0)
+		return (1);
+	i = 0;
+	while (i < cmd_count)
 	{
-		free_string_arr(paths);
-		free_string_arr(args);
-		return (NULL);
+		cmd = ft_strndup(cmds[i], wordlen(cmds[i], ' '));
+		block_len = blocklen(cmds[i], ' ');
+		block_len -= block_len != ft_strlen(cmds[i]);
+		args = ft_strdup(cmds[i] + block_len);
+		if (access(cmd, X_OK) != 0 && append_path_and_access(&cmd, paths) != 0)
+			return (free_on_error(cmd, args, paths));
+		cmds[i] = ft_strjoin(cmd, args);
+		free(cmd);
+		free(args);
+		i++;
 	}
-	return (args);
+	free_string_arr(paths);
+	return (0);
+}
+
+char	**get_cmd_args(const char *cmd)
+{
+	return (ft_split(cmd, ' '));
 }
