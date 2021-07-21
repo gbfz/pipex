@@ -10,7 +10,7 @@ static t_pipe	*new_pipe_node(int fd)
 	return (node);
 }
 
-void	append_pipe(t_pipe **head, int new_fd[2])
+static void	append_pipe(t_pipe **head, int new_fd[2])
 {
 	if (*head == NULL)
 	{
@@ -30,12 +30,23 @@ static void	del_pipe_node(t_pipe **node)
 	*node = tmp;
 }
 
+void	create_pipes(int cmd_count)
+{
+	int	fd[2];
+
+	if (cmd_count == 0)
+		return ;
+	pipe(fd);
+	append_pipe(get_pipe_list(), fd);
+	create_pipes(cmd_count - 1);
+}
+
 int	get_fd_from_pipe_list(void)
 {
 	t_pipe	**head;
 	int		fd;
 
-	head = get_pipe_list_addr();
+	head = get_pipe_list();
 	if (*head == NULL)
 		return (-1);
 	fd = (*head)->fd;

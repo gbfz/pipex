@@ -5,21 +5,11 @@ static int	handle_files(int file_fd[2], int ac, char **av)
 	file_fd[0] = open(av[1], O_RDONLY);
 	if (file_fd[0] == -1)
 		return (write(1, "Couldn't open file to read from\n", 32));
-	file_fd[1] = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+	file_fd[1] = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC,
+			S_IRUSR | S_IWUSR);
 	if (file_fd[1] == -1)
 		return (write(1, "Couldn't open file to write to\n", 31));
 	return (0);
-}
-
-void	create_pipes(int cmd_count)
-{
-	int	fd[2];
-
-	if (cmd_count == 0)
-		return ;
-	pipe(fd);
-	append_pipe(get_pipe_list_addr(), fd);
-	create_pipes(cmd_count - 1);
 }
 
 static void	execute_readfile_cmd(int readfile_fd, char *cmd, char **envp)
@@ -28,7 +18,7 @@ static void	execute_readfile_cmd(int readfile_fd, char *cmd, char **envp)
 	char	**args;
 	pid_t	pid;
 
-	args = get_cmd_args(cmd);
+	args = ft_split(cmd, ' ');
 	out_fd = get_fd_from_pipe_list();
 	pid = fork();
 	if (pid == 0)
@@ -54,7 +44,7 @@ static void	execute_inner_cmds(int cmd_count, char **cmd, char **envp)
 
 	if (cmd_count == 0)
 		return ;
-	args = get_cmd_args(*cmd);
+	args = ft_split(*cmd, ' ');
 	in_fd = get_fd_from_pipe_list();
 	out_fd = get_fd_from_pipe_list();
 	pid = fork();
@@ -80,7 +70,7 @@ static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
 	char	**args;
 	pid_t	pid;
 
-	args = get_cmd_args(cmd);
+	args = ft_split(cmd, ' ');
 	in_fd = get_fd_from_pipe_list();
 	pid = fork();
 	if (pid == 0)
@@ -113,6 +103,5 @@ int	main_exec_bonus(int ac, char **av, char **envp)
 	close(file_fd[0]);
 	close(file_fd[1]);
 	free_pid_list();
-	free_pipe_list();
 	return (get_exit_code());
 }

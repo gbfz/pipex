@@ -7,12 +7,7 @@ static t_pipe	**pipe_singleton(void)
 	return (&saved_ptr);
 }
 
-t_pipe	*get_pipe_list(void)
-{
-	return (*pipe_singleton());
-}
-
-t_pipe	**get_pipe_list_addr(void)
+t_pipe	**get_pipe_list(void)
 {
 	return (pipe_singleton());
 }

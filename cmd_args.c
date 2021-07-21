@@ -15,12 +15,13 @@ static char	**get_paths_with_slash(char **paths)
 
 	if (paths == NULL)
 		return (NULL);
-	i = -1;
-	while (paths[++i] != NULL)
+	i = 0;
+	while (paths[i] != NULL)
 	{
 		tmp = paths[i];
 		paths[i] = ft_strjoin(paths[i], "/");
 		free(tmp);
+		i++;
 	}
 	return (paths);
 }
@@ -57,7 +58,8 @@ static int	append_path_and_access(char **cmd, char **paths)
 		free(cmd_with_path);
 		i++;
 	}
-	printf("%s: command not found\n", *cmd);
+	write(1, *cmd, ft_strlen(*cmd));
+	write(1, ": command not found\n", 20);
 	return (1);
 }
 
@@ -88,9 +90,4 @@ int	handle_cmds(char **cmds, int cmd_count, char **envp)
 	}
 	free_string_arr(paths);
 	return (0);
-}
-
-char	**get_cmd_args(const char *cmd)
-{
-	return (ft_split(cmd, ' '));
 }

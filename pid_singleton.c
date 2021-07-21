@@ -54,4 +54,3 @@ void	wait_for_all_procs(void)
 		list = list->next;
 	}
 }
-

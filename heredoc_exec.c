@@ -5,7 +5,7 @@ static void	write_to_pipe(int fd, char **string)
 	write(fd, *string, ft_strlen(*string));
 	write(fd, "\n", 1);
 	free(*string);
-	*string = calloc(sizeof(char), 1); // TODO: replace with ft_
+	*string = ft_calloc(sizeof(char), 1);
 	write(1, "heredoc> ", 9);
 }
 
@@ -14,7 +14,7 @@ static void	execute_heredoc(int cmd1_in, char *delim)
 	char	*string;
 	char	c;
 
-	string = calloc(sizeof(char), 1); // TODO: replace with ft_
+	string = ft_calloc(sizeof(char), 1);
 	write(1, "heredoc> ", 9);
 	while (ft_strcmp(string, delim) != 0)
 	{
@@ -30,9 +30,8 @@ static void	execute_cmd(int in_fd, int out_fd, char *cmd, char **envp)
 {
 	char	**args;
 	pid_t	pid;
-	
-	printf("executing |%s|\n", cmd);
-	args = get_cmd_args(cmd);
+
+	args = ft_split(cmd, ' ');
 	pid = fork();
 	if (pid == 0)
 	{
@@ -81,6 +80,5 @@ int	heredoc_exec(char **av, char **envp)
 	close_all_fds(cmd1_fd, cmd2_fd, file_fd);
 	wait_for_all_procs();
 	free_pid_list();
-	free_pipe_list();
 	return (get_exit_code());
 }
