@@ -32,13 +32,14 @@ t_pid_list	*get_pid_list(void);
 t_pid_list	**get_pid_list_addr(void);
 void		append_pid(t_pid_list **list, pid_t new_pid);
 void		free_pid_list(void);
+void		wait_for_all_procs(void);
 
 //			CMD args
 int			handle_cmds(char **cmds, int cmd_count, char **envp);
 char		**get_cmd_args(const char *cmd);
 
 //			Heredoc
-void		heredoc_exec(int file_fd[2], char **av, char **envp);
+int			heredoc_exec(char **av, char **envp);
 
 //			Exit code
 int			get_exit_code(void);
@@ -51,6 +52,7 @@ char		*ft_strndup(const char *s, int len);
 char		**ft_split(const char *s, char delim);
 char		*ft_strjoin(const char *a, const char *b);
 int			ft_strncmp(const char *a, const char *b, size_t n);
+int			ft_strcmp(const char *a, const char *b);
 char		**free_string_arr(char **arr);
 int			wordlen(const char *s, char delim);
 int			blocklen(const char *s, char delim);

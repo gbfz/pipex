@@ -11,7 +11,7 @@ static int	handle_files(int file_fd[2], int ac, char **av)
 	return (0);
 }
 
-static void	wait_for_all_procs(void)
+void	wait_for_all_procs(void)
 {
 	t_pid_list	*list;
 	int			stat_loc;
@@ -121,30 +121,29 @@ static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
 	append_pid(get_pid_list_addr(), pid);
 }
 
-void	main_exec(int file_fd[2], int ac, char **av, char **envp)
+int	main_exec(int ac, char **av, char **envp)
 {
+	int	file_fd[2];
+
+	if (handle_files(file_fd, ac, av) != 0)
+		return (1);
+	if (handle_cmds(av + 2, ac - 3, envp) != 0)
+		return (2);
 	create_pipes(ac - 4);
 	execute_readfile_cmd(file_fd[0], av[2], envp);
 	execute_inner_cmds(ac - 5, av + 2, envp);
 	execute_writefile_cmd(file_fd[1], av[ac - 2], envp);
 	wait_for_all_procs();
+	close(file_fd[0]);
+	close(file_fd[1]);
+	return (get_exit_code());
 }
 
 int		main(int ac, char **av, char **envp)
 {
-	int	file_fd[2];
-
 	if (ac < 5)
 		return (printf("At least 4 args!\n"));
-	if (handle_files(file_fd, ac, av) != 0)
-		return (1);
-	if (handle_cmds(av + 2, ac - 3, envp) != 0)
-		return (2);
 	if (ft_strncmp(av[1], "here_doc", 8) == 0)
-		heredoc_exec(file_fd, av, envp);
-	else
-		main_exec(file_fd, ac, av, envp);
-	close(file_fd[0]);
-	close(file_fd[1]);
-	return (get_exit_code());
+		return (heredoc_exec(av, envp));
+	return (main_exec(ac, av, envp));
 }

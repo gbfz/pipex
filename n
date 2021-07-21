@@ -1,5 +1,0 @@
--rw-r--r--   1 meldora  student  12288 Jul 21 16:33 .old_cmd_args.c.swp
--rw-r--r--   1 meldora  student  12288 Jul 21 16:23 .string_functions.c.swp
--rw-r--r--   1 meldora  student   1698 Jul 21 17:58 cmd_args.c
--rw-r--r--   1 meldora  student    759 Jul 21 16:32 old_cmd_args.c
--rw-r--r--   1 meldora  student   1312 Jul 21 16:23 string_functions.c

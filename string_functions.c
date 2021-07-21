@@ -104,8 +104,11 @@ char	*ft_strappend(char *s, char c)
 	if (n == NULL)
 		return (NULL);
 	i = 0;
-	while (*s != '\0')
-		n[i++] = *s++;
+	while (s[i] != '\0')
+	{
+		n[i] = s[i];
+		i++;
+	}
 	n[i++] = c;
 	n[i] = '\0';
 	free(s);
