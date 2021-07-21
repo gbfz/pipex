@@ -4,9 +4,13 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <fcntl.h>
+# include <errno.h>
 
 # include <string.h>	// TODO:
 # include <stdio.h>		// TODO:
+
+//			Main exec
+int			main_exec(int ac, char **av, char **evnp);
 
 //			PIPE
 typedef struct s_pipe
@@ -28,8 +32,7 @@ typedef struct s_pid_list
 	struct s_pid_list	*next;
 }				t_pid_list;
 
-t_pid_list	*get_pid_list(void);
-t_pid_list	**get_pid_list_addr(void);
+t_pid_list	**get_pid_list(void);
 void		append_pid(t_pid_list **list, pid_t new_pid);
 void		free_pid_list(void);
 void		wait_for_all_procs(void);

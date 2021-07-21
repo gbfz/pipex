@@ -3,21 +3,13 @@
 static void	write_to_pipe(int fd, char **string)
 {
 	write(fd, *string, ft_strlen(*string));
+	write(fd, "\n", 1);
 	free(*string);
 	*string = calloc(sizeof(char), 1); // TODO: replace with ft_
 	write(1, "heredoc> ", 9);
 }
 
-static void	create_pipes(int cmd1_fd[2], int cmd2_fd[2],
-				int file_fd)
-{
-	pipe(cmd1_fd);
-	pipe(cmd2_fd);
-	dup2(cmd1_fd[1], cmd2_fd[0]);
-	dup2(cmd2_fd[1], file_fd);
-}
-
-static void	execute_heredoc(int heredoc_out, char *delim)
+static void	execute_heredoc(int cmd1_in, char *delim)
 {
 	char	*string;
 	char	c;
@@ -30,69 +22,65 @@ static void	execute_heredoc(int heredoc_out, char *delim)
 		if (c != '\n')
 			string = ft_strappend(string, c);
 		else
-			write_to_pipe(heredoc_out, &string);
+			write_to_pipe(cmd1_in, &string);
 	}
-	close(heredoc_out);
-	printf("out of cycle\n");
 }
 
-static void	execute_first_cmd(int cmd1_out, int cmd2_in, char *cmd, char **envp)
+static void	execute_cmd(int in_fd, int out_fd, char *cmd, char **envp)
 {
 	char	**args;
 	pid_t	pid;
-
-	printf(" 1 >> |%s|\n", cmd);
+	
+	printf("executing |%s|\n", cmd);
 	args = get_cmd_args(cmd);
-	for (int i = 0; args[i] != NULL; i++)
-		printf(" !! %s\n", args[i]);
 	pid = fork();
 	if (pid == 0)
 	{
+		dup2(in_fd, 0);
+		dup2(out_fd, 1);
+		close(in_fd);
+		close(out_fd);
 		execve(args[0], args, envp);
 		exit(127);
 	}
-	close(cmd1_out);
-	close(cmd2_in);
 	free_string_arr(args);
-	append_pid(get_pid_list_addr(), pid);
+	append_pid(get_pid_list(), pid);
 }
 
-static void	execute_second_cmd(int cmd2_out, int file_fd, char *cmd, char **envp)
+static void	close_all_fds(int cmd1_fd[2], int cmd2_fd[2], int file_fd)
 {
-	char	**args;
-	pid_t	pid;
-
-	printf(" 2 >> |%s|\n", cmd);
-	args = get_cmd_args(cmd);
-	for (int i = 0; args[i] != NULL; i++)
-		printf(" !! %s\n", args[i]);
-	pid = fork();
-	if (pid == 0)
-	{
-		execve(args[0], args, envp);
-		exit(127);
-	}
-	close(cmd2_out);
+	close(cmd1_fd[0]);
+	close(cmd1_fd[1]);
+	close(cmd2_fd[0]);
+	close(cmd2_fd[1]);
 	close(file_fd);
-	free_string_arr(args);
-	append_pid(get_pid_list_addr(), pid);
 }
 
 int	heredoc_exec(char **av, char **envp)
 {
-	int	file_fd;
-	int	cmd1_fd[2];
-	int	cmd2_fd[2];
+	int		file_fd;
+	int		cmd1_fd[2];
+	int		cmd2_fd[2];
+	pid_t	pid;
 
 	file_fd = open(av[5], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (file_fd == -1)
-		return (printf("Couldn't open infile\n"));
+		return (set_exit_code(ENOENT));
+	pipe(cmd1_fd);
+	pipe(cmd2_fd);
+	execute_heredoc(cmd1_fd[1], av[2]);
 	if (handle_cmds(av + 3, 2, envp) != 0)
-		return (1);
-	create_pipes(cmd1_fd, cmd2_fd, file_fd);
-	execute_heredoc(cmd1_fd[0], av[2]);
-	execute_first_cmd(cmd1_fd[1], cmd2_fd[0], av[3], envp);
-	execute_second_cmd(cmd2_fd[1], file_fd, av[4], envp);
+		return (set_exit_code(ENOENT));
+	pid = fork();
+	if (pid == 0)
+	{
+		execute_cmd(cmd1_fd[0], cmd2_fd[1], av[3], envp);
+		execute_cmd(cmd2_fd[0], file_fd, av[4], envp);
+		exit(0);
+	}
+	close_all_fds(cmd1_fd, cmd2_fd, file_fd);
 	wait_for_all_procs();
+	free_pid_list();
+	free_pipe_list();
 	return (get_exit_code());
 }
