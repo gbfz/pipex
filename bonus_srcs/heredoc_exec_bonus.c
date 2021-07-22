@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static void	write_to_pipe(int fd, char **string)
 {
@@ -24,6 +24,7 @@ static void	execute_heredoc(int cmd1_in, char *delim)
 		else
 			write_to_pipe(cmd1_in, &string);
 	}
+	free(string);
 	close(cmd1_in);
 }
 

@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static int	free_on_error(char *cmd, char *args, char **paths)
 {

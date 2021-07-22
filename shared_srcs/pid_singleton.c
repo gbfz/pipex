@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static t_pid_list	**pid_singleton(void)
 {

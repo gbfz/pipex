@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static int	handle_files(int file_fd[2], int ac, char **av)
 {
@@ -12,48 +12,24 @@ static int	handle_files(int file_fd[2], int ac, char **av)
 	return (0);
 }
 
-static void	execute_readfile_cmd(int readfile_fd, char *cmd, char **envp)
+static void	execute_cmd(int in_fd, int out_fd, char *cmd, char **envp)
 {
-	int		out_fd;
 	char	**args;
 	pid_t	pid;
 
 	args = ft_split(cmd, ' ');
-	out_fd = get_fd_from_pipe_list();
-	pid = fork();
-	if (pid == 0)
-	{
-		dup2(readfile_fd, 0);
-		dup2(out_fd, 1);
-		close(out_fd);
-		close(readfile_fd);
-		execve(args[0], args, envp);
-		exit(127);
-	}
-	close(out_fd);
-	free_string_arr(args);
-	append_pid(get_pid_list(), pid);
-}
-
-static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
-{
-	int		in_fd;
-	char	**args;
-	pid_t	pid;
-
-	args = ft_split(cmd, ' ');
-	in_fd = get_fd_from_pipe_list();
 	pid = fork();
 	if (pid == 0)
 	{
 		dup2(in_fd, 0);
-		dup2(writefile_fd, 1);
+		dup2(out_fd, 1);
 		close(in_fd);
-		close(writefile_fd);
+		close(out_fd);
 		execve(args[0], args, envp);
 		exit(127);
 	}
 	close(in_fd);
+	close(out_fd);
 	free_string_arr(args);
 	append_pid(get_pid_list(), pid);
 }
@@ -61,17 +37,16 @@ static void	execute_writefile_cmd(int writefile_fd, char *cmd, char **envp)
 int	main_exec(int ac, char **av, char **envp)
 {
 	int	file_fd[2];
+	int	pipe_fd[2];
 
 	if (handle_files(file_fd, ac, av) != 0)
 		return (1);
 	if (handle_cmds(av + 2, ac - 3, envp) != 0)
 		return (2);
-	create_pipes(ac - 4);
-	execute_readfile_cmd(file_fd[0], av[2], envp);
-	execute_writefile_cmd(file_fd[1], av[4], envp);
+	pipe(pipe_fd);
+	execute_cmd(file_fd[0], pipe_fd[1], av[2], envp);
+	execute_cmd(pipe_fd[0], file_fd[1], av[3], envp);
 	wait_for_all_procs();
-	close(file_fd[0]);
-	close(file_fd[1]);
 	free_pid_list();
 	return (get_exit_code());
 }

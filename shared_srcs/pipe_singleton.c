@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static t_pipe	**pipe_singleton(void)
 {

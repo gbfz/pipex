@@ -1,4 +1,4 @@
-#include "../pipex.h"
+#include "../includes/pipex.h"
 
 char	**free_string_arr(char **arr)
 {

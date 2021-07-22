@@ -1,4 +1,4 @@
-#include "../pipex.h"
+#include "../includes/pipex.h"
 
 char	*ft_strappend(char *s, char c)
 {

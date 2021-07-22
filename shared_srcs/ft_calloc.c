@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static void	*ft_memset(void *b, int c, size_t len)
 {

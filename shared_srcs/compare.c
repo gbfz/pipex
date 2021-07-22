@@ -1,4 +1,4 @@
-#include "../pipex.h"
+#include "../includes/pipex.h"
 
 int	ft_strncmp(const char *a, const char *b, size_t n)
 {

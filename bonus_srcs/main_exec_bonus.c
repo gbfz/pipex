@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static int	handle_files(int file_fd[2], int ac, char **av)
 {

@@ -1,4 +1,4 @@
-#include "../pipex.h"
+#include "../includes/pipex.h"
 
 int	wordlen(const char *s, char delim)
 {

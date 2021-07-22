@@ -1,4 +1,4 @@
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 static int	exit_code_singleton(int *new_code)
 {
