@@ -68,7 +68,7 @@ int	main_exec(int ac, char **av, char **envp)
 		return (2);
 	create_pipes(ac - 4);
 	execute_readfile_cmd(file_fd[0], av[2], envp);
-	execute_writefile_cmd(file_fd[1], av[ac - 2], envp);
+	execute_writefile_cmd(file_fd[1], av[4], envp);
 	wait_for_all_procs();
 	close(file_fd[0]);
 	close(file_fd[1]);
