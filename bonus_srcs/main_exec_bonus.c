@@ -91,10 +91,10 @@ int	main_exec_bonus(int ac, char **av, char **envp)
 {
 	int	file_fd[2];
 
-	if (handle_files(file_fd, ac, av) != 0)
-		return (1);
 	if (handle_cmds(av + 2, ac - 3, envp) != 0)
 		return (2);
+	if (handle_files(file_fd, ac, av) != 0)
+		return (1);
 	create_pipes(ac - 4);
 	execute_readfile_cmd(file_fd[0], av[2], envp);
 	execute_inner_cmds(ac - 5, av + 2, envp);
